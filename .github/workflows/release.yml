@@ -1,0 +1,37 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on tags like v1.0.0, v1.1.0, etc.
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        # Uses the name and settings required for your stabilized script
+        run: pyinstaller --onefile --console --name "Confluence_Exporter" confluence-md-exporter.py
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/Confluence_Exporter
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          body: "Automated build for Confluence to Markdown Exporter."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
