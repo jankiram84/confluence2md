@@ -52,8 +52,10 @@ This tool is a standalone portable executable. There is no installation process 
    * **Domain prefix** (e.g., `acme-corp`)
    * **Atlassian Email** (the email you use to log into Confluence)
    * **API Token** (*Note: Your keystrokes will be hidden for security when you paste your token. Just right-click to paste and hit Enter.*)
-3. You will be asked if you want to save these credentials. If you type `y`, it will create a small `confluence_creds.json` file in the same folder. Next time you run the tool, you won't have to type your email or token again!
-**Note**: For security, never share your confluence_creds.json file, as it contains your API token.
+3. You will be asked if you want to save these credentials. If you type `y`, it will create a `confluence_creds.json` file in the same folder. Next time you run the tool, you won't have to type your email or token again!
+
+   **Note**: For security reasons, never share your `confluence_creds.json` file, as it contains your API token.
+
 4. Finally, enter the **Root Page ID** you want to export, and choose a name for the output folder.
 
 **Note on Closing**: Once the export reaches 100%, the terminal will display [Process completed]. You can safely close the window by pressing Cmd + W or clicking the red "X" in the corner.
