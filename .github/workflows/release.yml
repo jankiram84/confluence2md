@@ -28,6 +28,15 @@ jobs:
       - name: Build with PyInstaller
         # REMOVED --codesign-identity to prevent Team ID mismatch errors
         run: pyinstaller --onefile --console --name "Confluence_Exporter" --clean confluence_md_exporter.py
+      
+      - name: Archive Release
+        # This creates a folder, copies the files, and zips them
+        run: |
+          mkdir confluence_exporter_macos
+          cp dist/Confluence_Exporter confluence_exporter_macos/
+          cp README.md confluence_exporter_macos/
+          cp LICENSE confluence_exporter_macos/
+          zip -r confluence_exporter_macos.zip confluence_exporter_macos/
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
