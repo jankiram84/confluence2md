@@ -38,22 +38,22 @@ This is the unique ID of the top-level page you want to export. The tool will ex
 
 This tool is a standalone portable executable. There is no installation process required!
 
-1. Download and extract the `Confluence_Exporter` zip file available in the `confluence2md_v1.0.0' release from the **Releases** section.
+1. Download and extract the `confluence_exporter_macos` zip file available from the latest release (v1.1.0).
 2. Double-click the extracted 'Confluence_Exporter` executable file. You will see a "Not Opened" error. Click **Done**.
    
    **Note**: macOS prevents you from opening the file because it is from an "unidentified developer". Perform the following steps:
 
-   1. Open **System Settings** > **Privacy & Security**.
+   1. On your MacOS, open **System Settings** > **Privacy & Security**.
    2. Scroll down to the **Security** section.
    3. Click **Open Anyway** next to the message about "Confluence_Exporter".
-3. **Confirm**: Click **Open** on the final pop-up.
+3. **Confirm**: Click **Open Anyway** on the final pop-up.
 4. Alternatively, open your Terminal, type `chmod +x `, drag the file into the terminal window, and hit **Enter**. Then you can double-click it to run.
 
 ---
 
 ## 💻 Running the Exporter
 
-1. After you allow your system to trust the executable file, **double-click** the `Confluence Exporter` file to run it.
+1. After you allow your system to trust the executable file, **double-click** the `Confluence_Exporter` file to run it.
 2. The terminal window will open and prompt you for the following:
    * **Domain prefix** (e.g., `acme-corp`)
    * **Atlassian Email** (the email you use to log into Confluence)
@@ -62,7 +62,7 @@ This tool is a standalone portable executable. There is no installation process 
 
    **Note**: For security reasons, never share your `confluence_creds.json` file, as it contains your API token.
 
-4. Finally, enter the **Root Page ID** you want to export, and choose a name for the output folder.
+4. Finally, enter the **Root Page ID** you want to export, and choose a name for the output folder. By default, the output folder is created in the same location as the downloaded executable file. Specify a different path if you want the output folder in a location of your choice.
 
 **Note on Closing**: Once the export reaches 100%, the terminal will display [Process completed]. You can safely close the window by pressing Cmd + W or clicking the red "X" in the corner.
 
