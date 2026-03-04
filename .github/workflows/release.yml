@@ -26,11 +26,11 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        # REMOVED --codesign-identity to prevent Team ID mismatch errors
+        # We use the underscore version to match your successful test environment
         run: pyinstaller --onefile --console --name "Confluence_Exporter" --clean confluence_md_exporter.py
-      
-      - name: Archive Release
-        # This creates a folder, copies the files, and zips them
+
+      - name: Create Zip Archive
+        # This step bundles the app with your instructions to fix the "Gatekeeper" error
         run: |
           mkdir confluence_exporter_macos
           cp dist/Confluence_Exporter confluence_exporter_macos/
@@ -41,9 +41,16 @@ jobs:
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/Confluence_Exporter
+          # IMPORTANT: This must point to the .zip created in the previous step
+          files: confluence_exporter_macos.zip
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
-          body: "Automated build for Confluence to Markdown Exporter. Note: macOS users may need to allow the app in System Settings > Privacy & Security."
+          body: |
+            ### 🚀 What's New
+            * Fixed "Team ID" library mapping errors.
+            * Added clean exit sequence to avoid red error text.
+            * Bundled README and LICENSE for easier setup.
+            
+            **Note:** macOS users must go to **System Settings > Privacy & Security** and click **Open Anyway** after the first launch attempt.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
