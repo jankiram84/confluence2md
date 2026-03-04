@@ -38,16 +38,22 @@ This is the unique ID of the top-level page you want to export. The tool will ex
 
 This tool is a standalone portable executable. There is no installation process required!
 
-1. Download the `Confluence_Exporter` file available in the `confluence2md_v1.0.0' release from the **Releases** section.
-2. If macOS prevents it from opening because it is from an "unidentified developer":
-   * **Right-click** the file and select **Open**.
-3. Alternatively, open your Terminal, type `chmod +x `, drag the file into the terminal window, and hit **Enter**. Then you can double-click it to run.
+1. Download and extract the `Confluence_Exporter` zip file available in the `confluence2md_v1.0.0' release from the **Releases** section.
+2. Double-click the extracted 'Confluence_Exporter` executable file. You will see a "Not Opened" error. Click **Done**.
+   
+   **Note**: macOS prevents you from opening the file because it is from an "unidentified developer". Perform the following steps:
+
+   1. Open **System Settings** > **Privacy & Security**.
+   2. Scroll down to the **Security** section.
+   3. Click **Open Anyway** next to the message about "Confluence_Exporter".
+3. **Confirm**: Click **Open** on the final pop-up.
+4. Alternatively, open your Terminal, type `chmod +x `, drag the file into the terminal window, and hit **Enter**. Then you can double-click it to run.
 
 ---
 
 ## 💻 Running the Exporter
 
-1. **Double-click** the `Confluence Exporter` file to run it.
+1. After you allow your system to trust the executable file, **double-click** the `Confluence Exporter` file to run it.
 2. The terminal window will open and prompt you for the following:
    * **Domain prefix** (e.g., `acme-corp`)
    * **Atlassian Email** (the email you use to log into Confluence)
