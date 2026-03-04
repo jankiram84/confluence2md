@@ -178,27 +178,28 @@ def run_main():
         params = {"cql": f"ancestor={rid} or id={rid}", "limit": 1}
         total = requests.get(search_url, params=params, auth=(eml, tok)).json().get("totalSize", 1)
         
-        # Use dynamic ncols to fit the current terminal window
         cols, _ = shutil.get_terminal_size()
         with tqdm(total=total, unit="page", colour="green", ncols=min(cols, 100)) as pbar:
             export_page_tree(dom, eml, tok, rid, full_out_path, pbar)
-            if pbar.n < pbar.total: pbar.update(pbar.total - pbar.n)
+            if pbar.n < pbar.total: 
+                pbar.update(pbar.total - pbar.n)
                 
         print(f"\n🎉 SUCCESS! Saved to: {full_out_path}")
         
     except KeyboardInterrupt:
-        print("\n🛑 Export aborted.")
+        print("\n🛑 Export aborted by user.")
     except Exception as e:
         print(f"\n❌ Error: {e}")
 
+    # FINAL CLEANUP: Replaces the countdown loop to prevent the macOS Terminal "Error"
     print("\n" + get_center_header(" All tasks finished successfully ", "="))
-    print("You can now close this window.".center(shutil.get_terminal_size()[0]))
+    print("Export complete. You may now close this window.".center(shutil.get_terminal_size()[0]))
     print()
     
-    # Graceful exit sequence to satisfy macOS terminal wrapper
+    # Standard graceful exit sequence
     sys.stdout.flush()
     sys.stderr.flush()
-    sys.exit(0) 
-
-if __name__ == "__main__":
-    run_main()
+    
+    # This specific exit code signals to macOS that the process is finished
+    # and prevents the terminal from reporting a crash/error.
+    sys.exit(0)

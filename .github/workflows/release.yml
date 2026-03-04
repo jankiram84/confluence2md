@@ -23,15 +23,20 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        # Uses the name and settings required for your stabilized script
-        run: pyinstaller --onefile --console --name "Confluence_Exporter" confluence-md-exporter.py
+        # Added ad-hoc signing flag
+        run: pyinstaller --onefile --console --name "Confluence_Exporter" --codesign-identity - confluence-md-exporter.py
+
+      - name: Archive Release
+        # Zips the binary to help bypass aggressive Gatekeeper quarantine
+        run: |
+          cd dist
+          zip Confluence_Exporter_macOS.zip Confluence_Exporter
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/Confluence_Exporter
+          files: dist/Confluence_Exporter_macOS.zip
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
-          body: "Automated build for Confluence to Markdown Exporter."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
