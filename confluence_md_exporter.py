@@ -203,3 +203,6 @@ def run_main():
     # This specific exit code signals to macOS that the process is finished
     # and prevents the terminal from reporting a crash/error.
     sys.exit(0)
+
+if __name__ == "__main__":
+    run_main()   

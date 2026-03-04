@@ -27,7 +27,7 @@ jobs:
 
       - name: Build with PyInstaller
         # REMOVED --codesign-identity to prevent Team ID mismatch errors
-        run: pyinstaller --onefile --console --name "Confluence_Exporter" --clean confluence-md-exporter.py
+        run: pyinstaller --onefile --console --name "Confluence_Exporter" --clean confluence_md_exporter.py
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
