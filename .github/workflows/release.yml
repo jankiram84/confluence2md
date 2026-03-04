@@ -3,7 +3,10 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Triggers on tags like v1.0.0, v1.1.0, etc.
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   build-and-release:
@@ -13,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -23,20 +26,15 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        # Added ad-hoc signing flag
-        run: pyinstaller --onefile --console --name "Confluence_Exporter" --codesign-identity - confluence-md-exporter.py
-
-      - name: Archive Release
-        # Zips the binary to help bypass aggressive Gatekeeper quarantine
-        run: |
-          cd dist
-          zip Confluence_Exporter_macOS.zip Confluence_Exporter
+        # REMOVED --codesign-identity to prevent Team ID mismatch errors
+        run: pyinstaller --onefile --console --name "Confluence_Exporter" --clean confluence-md-exporter.py
 
       - name: Create Release and Upload Asset
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: dist/Confluence_Exporter_macOS.zip
+          files: dist/Confluence_Exporter
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
+          body: "Automated build for Confluence to Markdown Exporter. Note: macOS users may need to allow the app in System Settings > Privacy & Security."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
