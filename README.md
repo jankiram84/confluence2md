@@ -38,7 +38,7 @@ This is the unique ID of the top-level page you want to export. The tool will ex
 
 This tool is a standalone portable executable. There is no installation process required!
 
-1. Download and extract the `confluence_exporter_macos` zip file available from the latest release (v1.1.0).
+1. Download and extract the `confluence_exporter_macos` zip file available from the latest release.
 2. Double-click the extracted 'Confluence_Exporter` executable file. You will see a "Not Opened" error. Click **Done**.
    
    **Note**: macOS prevents you from opening the file because it is from an "unidentified developer". Perform the following steps:
@@ -64,7 +64,11 @@ This tool is a standalone portable executable. There is no installation process 
 
 4. Finally, enter the **Root Page ID** you want to export, and choose a name for the output folder. By default, the output folder is created in the same location as the downloaded executable file. Specify a different path if you want the output folder in a location of your choice.
 
-**Note on Closing**: Once the export reaches 100%, the terminal will display [Process completed]. You can safely close the window by pressing Cmd + W or clicking the red "X" in the corner.
+5. Once the export reaches 100%, enter `y` if you want to continue exporting another page or enter `n` to exit.
+
+6. After you finish exporting all the required Confluence pages, you can choose to open the last export folder in your MacOS Finder.
+
+You can then safely close the window.
 
 ### Stopping the Export
 If you ever need to cancel the download midway through, click inside the terminal window and press **`Ctrl + C`**. The tool will safely abort the process.
