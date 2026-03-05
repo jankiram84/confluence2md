@@ -10,6 +10,8 @@ import time
 import shutil  # Added for window autosizing
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+import subprocess
+import platform
 
 # --- Setup Markdown Converter ---
 converter = html2text.HTML2Text()
@@ -33,13 +35,17 @@ def sanitize_name(name):
     return re.sub(r'[*?:"<>|]', "", name).strip()
 
 def get_user_config(base_path):
-    """REINSTATED & BEAUTIFIED: Your original config with dynamic alignment."""
+    """Handles authentication and returns credentials with initial defaults."""
     print(get_center_header(" Confluence to Markdown Exporter ", "="))
     print("(Press Ctrl+C at any time to cancel)".center(shutil.get_terminal_size()[0]))
     print()
     
     cred_file = os.path.join(base_path, "confluence_creds.json")
     domain, email, api_token = "", "", ""
+    
+    # Initial defaults for the first run of the loop
+    default_root_page_id = "2093252612" 
+    default_output_dir = "confluence_export"
     
     if os.path.exists(cred_file):
         try:
@@ -72,11 +78,9 @@ def get_user_config(base_path):
             print(" 🔒 Credentials saved.")
     
     print(draw_line())
-    root_page_id = input("Enter the Root Page ID to export: ").strip()
-    output_dir = input("Enter output folder name [default: confluence_export]: ").strip() or "confluence_export"
-        
-    print("\nCalculating total pages...".center(shutil.get_terminal_size()[0]))
-    return domain, root_page_id, email, api_token, output_dir
+    
+    # We now return the credentials and the default values for the UI loop
+    return domain, default_root_page_id, email, api_token, default_output_dir
 
 def preprocess_confluence_macros(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -170,30 +174,69 @@ def run_main():
     else:
         base_path = os.path.dirname(os.path.abspath(__file__))
 
+    session_history = []
+    print(get_center_header(" Confluence Markdown Exporter ", "="))
+
     try:
-        dom, rid, eml, tok, out = get_user_config(base_path)
-        full_out_path = os.path.join(base_path, out)
-
-        search_url = f"https://{dom}.atlassian.net/wiki/rest/api/search"
-        params = {"cql": f"ancestor={rid} or id={rid}", "limit": 1}
-        total = requests.get(search_url, params=params, auth=(eml, tok)).json().get("totalSize", 1)
+        dom, default_rid, eml, tok, default_out = get_user_config(base_path)
         
-        cols, _ = shutil.get_terminal_size()
-        with tqdm(total=total, unit="page", colour="green", ncols=min(cols, 100)) as pbar:
-            export_page_tree(dom, eml, tok, rid, full_out_path, pbar)
-            if pbar.n < pbar.total: 
-                pbar.update(pbar.total - pbar.n)
+        while True:
+            print("\n" + "-"*40)
+            rid = input(f"Enter Confluence Page ID: ").strip() or default_rid
+            out = input(f"Enter Output Folder Name: ").strip() or default_out
+            
+            full_out_path = os.path.join(base_path, out)
+            
+            # Re-insert the "Calculating" message here for better feedback
+            print("\n" + "Calculating total pages...".center(shutil.get_terminal_size()[0]))
+
+            try:
+                search_url = f"https://{dom}.atlassian.net/wiki/rest/api/search"
+                params = {"cql": f"ancestor={rid} or id={rid}", "limit": 1}
+                response = requests.get(search_url, params=params, auth=(eml, tok))
+                response.raise_for_status()
+                total = response.json().get("totalSize", 1)
                 
-        print(f"\n🎉 SUCCESS! Saved to: {full_out_path}")
-        
-    except KeyboardInterrupt:
-        print("\n🛑 Export aborted by user.")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
+                cols, _ = shutil.get_terminal_size()
+                with tqdm(total=total, unit="page", colour="green", ncols=min(cols, 100)) as pbar:
+                    export_page_tree(dom, eml, tok, rid, full_out_path, pbar)
+                    if pbar.n < pbar.total: 
+                        pbar.update(pbar.total - pbar.n)
+                
+                print(f"\n🎉 SUCCESS! Saved to: {full_out_path}")
+                session_history.append(full_out_path)
+                
+                # Update defaults for next loop iteration
+                default_rid = rid
+            
+            except Exception as e:
+                print(f"\n❌ Export Error: {e}")
 
-    # FINAL CLEANUP: Replaces the countdown loop to prevent the macOS Terminal "Error"
-    print("\n" + get_center_header(" All tasks finished successfully ", "="))
-    print("Export complete. You may now close this window.".center(shutil.get_terminal_size()[0]))
+            print("\n" + "-"*40)
+            choice = input("Would you like to export another page? (y/n): ").lower().strip()
+            if choice != 'y':
+                break
+
+    except KeyboardInterrupt:
+        print("\n🛑 Operation aborted by user.")
+    except Exception as e:
+        print(f"\n❌ System Error: {e}")
+
+    # FINAL SUMMARY AND FINDER PROMPT
+    if session_history:
+        print("\n" + get_center_header(" SESSION SUMMARY ", "="))
+        print(f"Successfully exported {len(session_history)} page tree(s):")
+        for path in session_history:
+            print(f" 📁 {path}")
+        
+        # Ask to open the last exported folder at the very end
+        print("\n" + "-"*40)
+        open_choice = input("Would you like to open the last export folder in Finder? (y/n): ").lower().strip()
+        if open_choice == 'y':
+            subprocess.run(["open", session_history[-1]])
+
+    print("\n" + get_center_header(" Thank you for using the tool ", "="))
+    print("Process finished. You may now close this window.".center(shutil.get_terminal_size()[0]))
     print()
     
     # Standard graceful exit sequence
@@ -206,3 +249,8 @@ def run_main():
 
 if __name__ == "__main__":
     run_main()   
+
+
+
+
+    
