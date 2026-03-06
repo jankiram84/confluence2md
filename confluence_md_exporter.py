@@ -1,3 +1,4 @@
+import email
 import os
 import sys
 import re
@@ -13,21 +14,31 @@ from tqdm import tqdm
 import subprocess
 import platform
 
+
 # --- Setup Markdown Converter ---
 converter = html2text.HTML2Text()
 converter.ignore_links = False
 converter.ignore_images = False
 converter.body_width = 0
 
-def get_center_header(text, char="="):
-    """Dynamically sizes headers to the terminal width."""
-    columns, _ = shutil.get_terminal_size()
-    return text.center(columns, char)
+# ANSI Color Escape Codes (Ensure these are at the top)
+B_BLUE = "\033[1;34m"
+CYAN = "\033[96m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
 
-def draw_line(char="-"):
-    """Draws a line across the full terminal width."""
+def get_center_header(text, char="━"):
+    """Dynamically sizes headers to the terminal width using the Blue theme."""
     columns, _ = shutil.get_terminal_size()
-    return char * columns
+    # Apply the blue color to the border characters
+    return f"{B_BLUE}{text.center(columns, char)}{RESET}"
+
+def draw_line(char="─"):
+    """Draws a subtle divider line across the terminal width."""
+    columns, _ = shutil.get_terminal_size()
+    return f"{B_BLUE}{char * columns}{RESET}"
 
 def sanitize_name(name):
     """Replaces spaces with hyphens and removes illegal characters."""
@@ -36,9 +47,6 @@ def sanitize_name(name):
 
 def get_user_config(base_path):
     """Handles authentication and returns credentials with initial defaults."""
-    print(get_center_header(" Confluence to Markdown Exporter ", "="))
-    print("(Press Ctrl+C at any time to cancel)".center(shutil.get_terminal_size()[0]))
-    print()
     
     cred_file = os.path.join(base_path, "confluence_creds.json")
     domain, email, api_token = "", "", ""
@@ -168,27 +176,47 @@ def export_page_tree(domain, email, api_token, page_id, current_dir, pbar, prefi
                 export_page_tree(domain, email, api_token, child["id"], sub_dir, pbar, f"{index:02d}-")
     except: pbar.update(1)
 
+def clear_terminal():
+    """Clears the terminal screen based on the OS."""
+    # 'cls' for windows, 'clear' for mac/linux
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def run_main():
+    # Clear the screen before anything else starts
+    clear_terminal()
+
     if getattr(sys, 'frozen', False):
         base_path = os.path.dirname(sys.executable)
     else:
         base_path = os.path.dirname(os.path.abspath(__file__))
 
     session_history = []
-    print(get_center_header(" Confluence Markdown Exporter ", "="))
+    cols, _ = shutil.get_terminal_size()
+
+    # Premium Header Setup
+    cols, _ = shutil.get_terminal_size()
+    print(f"{B_BLUE}{'━'*cols}{RESET}")
+    print(f"{B_BLUE}{BOLD}CONFLUENCE MARKDOWN EXPORTER{RESET}".center(cols + 10)) # +10 accounts for ANSI codes
+    print(f"{B_BLUE}{'━'*cols}{RESET}")
+    print(f"\033[2m{'(Press Ctrl+C at any time to cancel)'.center(cols)}\033[0m\n")
 
     try:
+        # Load credentials once
         dom, default_rid, eml, tok, default_out = get_user_config(base_path)
+        print(f" {GREEN}🔒 Authenticated:{RESET} {CYAN}{eml}{RESET}\n")
         
         while True:
-            print("\n" + "-"*40)
-            rid = input(f"Enter Confluence Page ID: ").strip() or default_rid
-            out = input(f"Enter Output Folder Name: ").strip() or default_out
+            print(f" {B_BLUE}📝 NEW EXPORT TASK{RESET}")
+            print(f" {B_BLUE}{'─'*40}{RESET}")
+            
+            # Interactive Prompts
+            rid = input(f" {B_BLUE}❯{RESET} Enter Page ID: ").strip() or default_rid
+            out = input(f" {B_BLUE}❯{RESET} Output Folder: ").strip() or default_out
             
             full_out_path = os.path.join(base_path, out)
             
-            # Re-insert the "Calculating" message here for better feedback
-            print("\n" + "Calculating total pages...".center(shutil.get_terminal_size()[0]))
+            # Feedback Phase
+            print(f"\n {YELLOW}⚙️  Calculating total pages...{RESET}")
 
             try:
                 search_url = f"https://{dom}.atlassian.net/wiki/rest/api/search"
@@ -197,47 +225,49 @@ def run_main():
                 response.raise_for_status()
                 total = response.json().get("totalSize", 1)
                 
-                cols, _ = shutil.get_terminal_size()
+                # Progress Bar
                 with tqdm(total=total, unit="page", colour="green", ncols=min(cols, 100)) as pbar:
                     export_page_tree(dom, eml, tok, rid, full_out_path, pbar)
                     if pbar.n < pbar.total: 
                         pbar.update(pbar.total - pbar.n)
                 
-                print(f"\n🎉 SUCCESS! Saved to: {full_out_path}")
+                # Inline Success
+                print(f"\n {BOLD}{GREEN}✨ SUCCESS!{RESET} Saved to: {CYAN}{full_out_path}{RESET}")
                 session_history.append(full_out_path)
                 
-                # Update defaults for next loop iteration
+                # Memory for next iteration
                 default_rid = rid
             
             except Exception as e:
-                print(f"\n❌ Export Error: {e}")
+                print(f"\n {BOLD}\033[91m❌ Export Error:{RESET} {e}")
 
-            print("\n" + "-"*40)
-            choice = input("Would you like to export another page? (y/n): ").lower().strip()
+            print(f" {B_BLUE}{'─'*40}{RESET}")
+            choice = input(f" {B_BLUE}❯{RESET} Export another page? (y/n): ").lower().strip()
             if choice != 'y':
                 break
 
     except KeyboardInterrupt:
-        print("\n🛑 Operation aborted by user.")
+        print(f"\n {YELLOW}🛑 Operation aborted by user.{RESET}")
     except Exception as e:
-        print(f"\n❌ System Error: {e}")
+        print(f"\n {BOLD}\033[91m❌ System Error:{RESET} {e}")
 
-    # FINAL SUMMARY AND FINDER PROMPT
+    # FINAL SUMMARY
     if session_history:
-        print("\n" + get_center_header(" SESSION SUMMARY ", "="))
-        print(f"Successfully exported {len(session_history)} page tree(s):")
+        print("\n" + f"{B_BLUE}{'━'*cols}{RESET}")
+        print(f" {B_BLUE}📊 SESSION SUMMARY{RESET}")
+        print(f" Successfully exported {len(session_history)} page tree(s):")
         for path in session_history:
-            print(f" 📁 {path}")
+            print(f"  {GREEN}📁{RESET} {CYAN}{path}{RESET}")
         
-        # Ask to open the last exported folder at the very end
-        print("\n" + "-"*40)
-        open_choice = input("Would you like to open the last export folder in Finder? (y/n): ").lower().strip()
+        print(f" {B_BLUE}{'─'*40}{RESET}")
+        open_choice = input(f" {B_BLUE}❯{RESET} Open the last folder in Finder? (y/n): ").lower().strip()
         if open_choice == 'y':
             subprocess.run(["open", session_history[-1]])
 
-    print("\n" + get_center_header(" Thank you for using the tool ", "="))
-    print("Process finished. You may now close this window.".center(shutil.get_terminal_size()[0]))
-    print()
+    # Final Exit Branding
+    print("\n" + f"{B_BLUE}{'━'*cols}{RESET}")
+    print(f"{BOLD}Thank you for using the tool!{RESET}".center(cols))
+    print(f"{B_BLUE}{'━'*cols}{RESET}\n")
     
     # Standard graceful exit sequence
     sys.stdout.flush()
